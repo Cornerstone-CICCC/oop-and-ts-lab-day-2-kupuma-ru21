@@ -9,14 +9,37 @@ interface Employee {
 }
 
 interface Company {
-
+  name: string;
+  address: string;
+  employees: Employee[];
 }
 
-function updateCompany(company, updates) {
-  
+type Updates = Omit<Partial<Company>, "employees"> & {
+  employees: Partial<Employee>[];
+};
+
+function updateCompany(company: Company, updates: Updates): Company {
+  return {
+    ...company, // Spread the existing company object
+    ...updates, // Apply the partial updates to the top-level properties
+    employees: updates.employees
+      ? company.employees.map((employee, index) => ({
+          ...employee,
+          ...(updates.employees && updates.employees[index]), // Apply updates to employees if provided
+        }))
+      : company.employees, // If no updates to employees, retain the original employees
+  };
 }
 
 // Expected output:
-const company = { name: "TechCorp", address: "123 St", employees: [{ name: "Alice", role: "Developer", salary: 100000 }] };
-updateCompany(company, { employees: [{ name: "Alice", role: "Senior Developer" }] }) 
+const company = {
+  name: "TechCorp",
+  address: "123 St",
+  employees: [{ name: "Alice", role: "Developer", salary: 100000 }],
+};
+console.log(
+  updateCompany(company, {
+    employees: [{ name: "Alice", role: "Senior Developer" }],
+  })
+);
 // { name: "TechCorp", address: "123 St", employees: [{ name: "Alice", role: "Senior Developer", salary: 100000 }] }
